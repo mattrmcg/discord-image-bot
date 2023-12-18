@@ -10,9 +10,6 @@ const token = process.env.BOT_TOKEN;
 // Guilds is events related to servers. Possibly need to add intent to handle message events if not included in Guilds.
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-client.once(Events.ClientReady, readyClient => {
-    console.log(`Ready! Logged in as ${readyClient.user.tag}`);
-});
 
 client.commands = new Collection(); // creates Client instance's commands field with collection of commands
 
@@ -37,27 +34,18 @@ for (const folder of commandFolders) {
     }
 }
 
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
+for (const file of eventFiles) {
+    const filePath = path.join(eventsPath, file);
+    const event = require(filePath);
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args));
+    }
+}
+
 client.login(token);
 
-// event listener for slash commands
-client.on(Events.InteractionCreate, async interaction => {
-    if (!interaction.isChatInputCommand()) return; // exit block if interaction isn't a ChatInputCommand
-
-    const command = interaction.client.commands.get(interaction.commandName); // get command from client.commands Collection
-
-    if (!command) { // if command is null
-        console.error(`No command matching ${interaction.commandName} was found`); // no command found in client.commands
-        return; // exits event listener invocation
-    }
-
-    try {
-        await command.execute(interaction); // trys to execute slash command
-    } catch (error) {
-        console.error(error);
-        if (interaction.replied || interaction.deferred) { // if interaction was replied to or deferred, send error
-            await interaction.followUp({ content : 'There was an error while executing this command!', ephemeral : true});
-        } else { // else, reply with error
-            await interaction.reply({ content: 'There was an error while executing this command!', ephemeral : true});
-        }
-    }
-});
