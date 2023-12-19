@@ -18,12 +18,12 @@ const commandFolders = fs.readdirSync(foldersPath); // reads commands directory 
 
 for (const folder of commandFolders) {
     const commandsPath = path.join(foldersPath, folder); 
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    const commandFiles = fs.readdirSync(commandsPath);
     // ^^^ reads current command folder and returns array of names of comman files with .js extensions ^^^
 
     for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
-        const command  = require(filePath); // load command
+        const command  = require(filePath); 
 
         // Set a new item in the collection with the key as the command name and the value as the exported module
         if ('data' in command && 'execute' in command) { // if "data" and "execute" properties are defined
