@@ -11,12 +11,17 @@ const openai = new OpenAI({
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('generate')
-        .setDescription('Generates a DALLE image based on given prompt'),
+        .setDescription('Generates a DALLE image based on given prompt')
+        .addStringOption(option => option.setName('prompt')
+                .setDescription('The prompt for the image model. Be as detailed as possible.')
+                .setRequired(true)),
     async execute(interaction) {
+
+        const imagePrompt = interaction.options.getString('prompt');
 
         const response = await openai.images.generate({
             model: "dall-e-3",
-            prompt: "a white siamese cat",
+            prompt: imagePrompt,
             n: 1,
             size: "1024x1024",
         });
